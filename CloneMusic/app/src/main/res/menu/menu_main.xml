@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/itemPlaylist"
+        android:icon="@drawable/plus"
+        app:showAsAction="always"
+        android:title="@string/ajoutPlaylist" />
+    <item
+        android:id="@+id/recherche"
+        android:icon="@drawable/loupe"
+        app:actionViewClass="android.widget.SearchView"
+        app:showAsAction="always"
+        android:title="@string/recherche" />
+    <item
+        android:id="@+id/itemParametres"
+        android:title="@string/option_parametres"
+        android:visible="true" />
+    <item
+        android:id="@+id/itemInfos"
+        android:title="@string/infos" />
+</menu>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="auteur">By Christophe Verreault</string>
+
+    <string name="app_name">Clone Music</string>
+    <string name="listeLecture">Playlists</string>
+    <string name="morceaux">Songs</string>
+    <string name="option_parametres">Settings</string>
+    <string name="option_retour">Back</string>
+    <string name="erreur_io">File access error</string>
+    <string name="stockage_refuse">Please grant permission in app settings</string>
+    <string name="infos">About</string>
+    <string name="recherche">Search</string>
+    <string name="ajoutPlaylist">Add</string>
+    <string name="pileFaible">Your battery is low.</string>
+    <string name="texteExtensions">Supported file formats :</string>
+    <string name="extensionsSupportees">.mp3 .3gp .mkv .flac .ogg and many more…</string>
+
+</resources>

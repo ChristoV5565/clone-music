@@ -1,0 +1,20 @@
+<resources>
+
+    <string name="auteur">Par Christophe Verreault</string>
+    <string name="version" translatable="false">Version 1.0</string>
+
+    <string name="app_name">Clone Music</string>
+    <string name="listeLecture">Listes de lecture</string>
+    <string name="morceaux">Morceaux</string>
+    <string name="option_parametres">Paramètres</string>
+    <string name="option_retour">Retour</string>
+    <string name="erreur_io">Erreur d\'accès au fichier</string>
+    <string name="stockage_refuse">Veuillez autoriser l\'accès au médias dans les paramètres</string>
+    <string name="infos">À propos</string>
+    <string name="recherche">Rechercher</string>
+    <string name="ajoutPlaylist">Ajouter</string>
+    <string name="pileFaible">Votre pile est faible.</string>
+    <string name="texteExtensions">Formats supportés :</string>
+    <string name="extensionsSupportees">.mp3 .3gp .mkv .flac .ogg et bien d\'autres…</string>
+
+</resources>
