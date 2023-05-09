@@ -12,6 +12,8 @@ import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -24,6 +26,8 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
     private final IBinder musicBinder = new MusicBinder();
     private final String TAG = "LecteurMusique";
     private boolean surPause = false;
+
+    GestionnaireBD gestionnaireBD;
 
     @Override
     public void onCreate() {
@@ -47,11 +51,15 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         {
             mediaPlayer.reset();
 
-            Chanson chanson = listeMusique.get(position);
+            //Position est la position dans la liste
+
+            //Chanson chanson = listeMusique.get(position);
             //long chansonCourante = chanson.getID();
             //Uri uriChanson = chanson.getUri();
+            gestionnaireBD = new GestionnaireBD(this);
+            int test = gestionnaireBD.queryChansons(position);
 
-            Uri uriChanson = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, chanson.getID());
+            Uri uriChanson = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,test);
 
             try
             {
@@ -80,9 +88,6 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
     {
         mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-
-        //TODO: Vérifier les droits pour le wake lock dans les permissions
-
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
@@ -119,6 +124,8 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
     public void onPrepared(MediaPlayer mediaPlayer)
     {
         mediaPlayer.start();
+        Intent rafraichir = new Intent("LECTEUR_PRET");
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(rafraichir);
     }
 
     @Override
@@ -153,6 +160,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
     {
         surPause = true;
         mediaPlayer.pause();
+        Log.d(TAG, "Sur pause");
     }
 
     public void setPosition(int position)
@@ -175,6 +183,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         {
             position = listeMusique.size() - 1;
         }
+        resetPause();
         jouer();
     }
 
@@ -183,10 +192,11 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         position ++;
 
         //Retourne au début de la liste si on tente de jouer une chanson après la toute dernière de la liste
-        if(position > listeMusique.size())
+        if(position >= listeMusique.size())
         {
             position = 0;
         }
+        resetPause();
         jouer();
     }
 }

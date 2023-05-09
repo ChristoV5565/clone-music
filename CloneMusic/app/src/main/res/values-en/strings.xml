@@ -16,5 +16,7 @@
     <string name="pileFaible">Your battery is low.</string>
     <string name="texteExtensions">Supported file formats :</string>
     <string name="extensionsSupportees">.mp3 .3gp .mkv .flac .ogg and many more…</string>
+    <string name="scan">Scan music</string>
+    <string name="activiteParametres">Settings</string>
 
 </resources>

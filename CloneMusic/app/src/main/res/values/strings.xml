@@ -16,5 +16,7 @@
     <string name="pileFaible">Votre pile est faible.</string>
     <string name="texteExtensions">Formats supportés :</string>
     <string name="extensionsSupportees">.mp3 .3gp .mkv .flac .ogg et bien d\'autres…</string>
+    <string name="scan">Scanner la musique</string>
+    <string name="activiteParametres">Paramètres</string>
 
 </resources>

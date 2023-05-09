@@ -7,7 +7,10 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -30,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 import java.util.ArrayList;
 
@@ -45,6 +49,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     ListView listViewMusique;
     ListView listViewPlaylists;
     MenuItem itemPlaylist;
+    Cursor curseurChansons;
 
     //Déclaration des éléments locaux de la classe
     ArrayList<Chanson> arrayListChansons;
@@ -60,6 +65,20 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
 
     //Broadcastreciever pour la batterie
     BroadcastRecieverBatterie broadcastRecieverBatterie;
+
+    GestionnaireBD gestionnaireBD;
+
+    private BroadcastReceiver rafraichisseur = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (controleurMusique != null)
+            {
+                controleurMusique.show();
+            }
+
+        }
+    };
 
     //Permet de démarrer le service de lecture lors de l'ouverture de l'application
     @Override
@@ -78,6 +97,13 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
 
             Log.d(TAG, "Service de lecture démarré");
         }
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(rafraichisseur, new IntentFilter("LECTEUR_PRET"));
     }
 
     @Override
@@ -116,14 +142,29 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         toolbar.setTitle("Clone Music");
         toolbar.setTitleTextColor(Color.WHITE);
 
-        //Initialisation de la liste de chansons derrière la listView
+
+
+        gestionnaireBD = new GestionnaireBD(this);
+
+        //scanMusique(); //TODO: Remplacer par un appel à la base de données
+
+        Cursor curseur = gestionnaireBD.queryChansons();
+        String[] from = {GestionnaireBD.TITRE_CHANSONS};
+        int[] to = {android.R.id.text1};
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, curseur, from, to, 0);
+        MyViewBinder myViewBinder = new MyViewBinder();
+        adapter.setViewBinder(myViewBinder);
+        listViewMusique.setAdapter(adapter);
+
+/*        //Initialisation de la liste de chansons derrière la listView
         arrayListChansons = new ArrayList<Chanson>();
-
-        scanMusique(); //TODO: Remplacer par un appel à la base de données
-
         ArrayList<String> listeChansons = genererListeTitres(arrayListChansons);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listeChansons);
         listViewMusique.setAdapter(arrayAdapter);
+*/
+
+
+
 
         //Demande la permission de lire les fichiers à l'utilisateur si ce n'a pas déjà été fait
         if (verifPermissionStockage() == false) {
@@ -134,6 +175,15 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         broadcastRecieverBatterie = new BroadcastRecieverBatterie();
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_LOW);
         registerReceiver(broadcastRecieverBatterie, intentFilter);
+
+
+    }
+
+    private class MyViewBinder implements SimpleCursorAdapter.ViewBinder {
+        @Override
+        public boolean setViewValue(View view, Cursor cursor, int fieldIndex) {
+            return false;
+        }
     }
 
     @Override
@@ -241,18 +291,17 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         }
     }
 
-    public void scanMusique() {
+/*    public void scanMusique() {
         int id;
         int colonneId;
 
         String titre;
         int colonneTitre;
 
-        long longueur;
-        int colonneLongueur;
+        Chanson chanson;
 
-        int colonneUri;
-        Uri uriChanson;
+        //Base de données
+        //curseurChansons = this.getBD().queryChansons();
 
         //Permet d'aller lire la musique dans le téléphone
         ContentResolver contentResolver = getContentResolver();
@@ -262,31 +311,25 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         if (curseurFichiersAudio != null && curseurFichiersAudio.moveToFirst()) {
             //Récupère les numéros des colonnes de la table des chansons retournées
             colonneId = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media._ID);
-
-            //NOUVEAU
-            colonneUri = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media.DATA);
-
             colonneTitre = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            colonneLongueur = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
             //Itère sur la liste de toutes les chansons et les rajoute à la liste des chansons disponibles sur le téléphone dans l'application
             do {
                 //Récupère les données pertinentes de la ligne visée par le curseur
                 id = curseurFichiersAudio.getInt(colonneId);
                 titre = curseurFichiersAudio.getString(colonneTitre);
-                longueur = curseurFichiersAudio.getLong(colonneLongueur);
-                uriChanson = Uri.parse(curseurFichiersAudio.getString(colonneUri));
 
+                chanson = new Chanson(id, titre);
 
-                //Ajoute les données dans un objet chanson, qui est lui-même ajouté à la liste de toutes les chansons
-                //arrayListChansons.add(new Chanson(id, titre, longueur));
-                arrayListChansons.add(new Chanson(id, uriChanson, titre, longueur));
+                gestionnaireBD.insertChanson(chanson);
+
+                //arrayListChansons.add(chanson);
             }
+
             //Itère sur les chansons jusqu'à la dernière
             while (curseurFichiersAudio.moveToNext());
-
         }
-    }
+    }*/
 
     public ArrayList<String> genererListeTitres(ArrayList<Chanson> liste)
     {
@@ -303,9 +346,12 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
     {
+        initControleurMusique();
+        lecteurMusique.resetPause();
         lecteurMusique.setChanson(i);
         lecteurMusique.jouer();
-        initControleurMusique();
+
+        controleurMusique.show(0);
 
     }
 
@@ -330,10 +376,9 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     //Initialiser les fonctions correspondant aux éléments du controleur de média
     private void initControleurMusique() {
 
-        Log.d(TAG, "Initialisation du controleur + lecteur");
-
         if(controleurMusique == null)
         {
+            Log.d(TAG, "Initialisation du controleur + lecteur");
             controleurMusique = new ControleurMusique(this);
 
             controleurMusique.setPrevNextListeners(new View.OnClickListener() {
@@ -348,29 +393,27 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
                 }
             });
 
-
+            controleurMusique.setMediaPlayer(this);
+            controleurMusique.setAnchorView(findViewById(R.id.listViewMusique));
+            controleurMusique.setEnabled(true);
+            controleurMusique.show();
         }
-
-        lecteurMusique.resetPause();
-
-        controleurMusique.setMediaPlayer(this);
-        controleurMusique.setAnchorView(findViewById(R.id.listViewMusique));
-        controleurMusique.setEnabled(true);
-        controleurMusique.show();
+        else
+        {
+            Log.d(TAG, "Contrôleur déjà initialisé");
+        }
     }
 
     //Joue la chanson suivante
     private void jouerSuivant()
     {
         lecteurMusique.jouerSuivant();
-        controleurMusique.show(0);
     }
 
     //Joue la chanson précédente
     private void jouerPrecedent()
     {
         lecteurMusique.jouerPrecedent();
-        controleurMusique.show(0);
     }
 
     //Démarrage de la lecture de média
@@ -464,4 +507,11 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     public int getAudioSessionId() {
         return 0;
     }
+
+    public GestionnaireBD getBD()
+    {
+        return new GestionnaireBD(this);
+    }
+
+
 }
