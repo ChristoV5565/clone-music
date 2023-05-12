@@ -1,5 +1,13 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Broadcast Reciever Batterie
+*
+* Permet à l'application d'afficher un toast à l'utilisateur lorsque la batterie est faible
+*
+* */
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

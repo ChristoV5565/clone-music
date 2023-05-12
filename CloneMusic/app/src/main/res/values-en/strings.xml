@@ -18,5 +18,11 @@
     <string name="extensionsSupportees">.mp3 .3gp .mkv .flac .ogg and many more…</string>
     <string name="scan">Scan music</string>
     <string name="activiteParametres">Settings</string>
+    <string name="titreDefaut">Title</string>
+    <string name="boutonContinuer">Continue</string>
+    <string name="choix">Choose songs to add to the playlist</string>
+    <string name="ordre">Order songs in the playlist</string>
+    <string name="titre_vide">Playlist doesn\'t have a title</string>
+    <string name="selection_vide">Playlist doesn\'t have any songs</string>
 
 </resources>

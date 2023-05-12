@@ -8,12 +8,6 @@
         app:showAsAction="always"
         android:title="@string/ajoutPlaylist" />
     <item
-        android:id="@+id/recherche"
-        android:icon="@drawable/loupe"
-        app:actionViewClass="android.widget.SearchView"
-        app:showAsAction="always"
-        android:title="@string/recherche" />
-    <item
         android:id="@+id/itemParametres"
         android:title="@string/option_parametres"
         android:visible="true" />

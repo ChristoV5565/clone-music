@@ -1,5 +1,16 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Activité Infos
+*
+* Cette activité affiche de l'information à l'usager incluant :
+*   - Nom de l'auteur
+*   - Version
+*   - Formats de fichiers audio supportés
+*
+* */
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -10,9 +21,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 public class ActiviteInfos extends AppCompatActivity {
 

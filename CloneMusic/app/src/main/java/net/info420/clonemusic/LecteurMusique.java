@@ -1,5 +1,13 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Classe LecteurMusique
+*
+* Permet de contrôler la lecture de fichiers audio sur le téléphone.
+*
+* */
+
 import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
@@ -15,18 +23,22 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
 
 public class LecteurMusique extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener{
 
+    //Lecteur de musique
     private MediaPlayer mediaPlayer;
-    private ArrayList<Chanson> listeMusique;
+    //Position de la chanson
     private int position;
+    //Nombre de chansons total dans le téléphone
+    private int nbChansons;
+    //Lie le lecteur et le service ensemble
     private final IBinder musicBinder = new MusicBinder();
+    //Tag pour le debugging
     private final String TAG = "LecteurMusique";
+    //Flag pour la lecture
     private boolean surPause = false;
-
+    //Gestionnaire pour la base de données
     GestionnaireBD gestionnaireBD;
 
     @Override
@@ -36,10 +48,16 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         position = 0;
         mediaPlayer = new MediaPlayer();
 
+        gestionnaireBD = new GestionnaireBD(this);
+
+        nbChansons = gestionnaireBD.queryNombreChansons();
+        Log.d(TAG,"Nombre de chansons : " + nbChansons);
+
         init();
 
     }
 
+    //Lorsque invoqué, continue la chanson si elle était sur pause, ou la démarre s'il s'agit d'une nouvelle chanson
     public void jouer()
     {
         if(surPause)
@@ -51,15 +69,10 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         {
             mediaPlayer.reset();
 
-            //Position est la position dans la liste
-
-            //Chanson chanson = listeMusique.get(position);
-            //long chansonCourante = chanson.getID();
-            //Uri uriChanson = chanson.getUri();
             gestionnaireBD = new GestionnaireBD(this);
-            int test = gestionnaireBD.queryChansons(position);
+            int idMedia = gestionnaireBD.queryChansons(position);
 
-            Uri uriChanson = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,test);
+            Uri uriChanson = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, idMedia);
 
             try
             {
@@ -71,7 +84,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
             mediaPlayer.prepareAsync();
         }
 
-        Log.d(TAG, "JOUER");
+        Log.d(TAG, "Jouer position : " + position);
     }
 
     public void resetPause()
@@ -93,11 +106,6 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         mediaPlayer.setOnErrorListener(this);
     }
 
-    public void setListeMusique(ArrayList<Chanson> listeMusique)
-    {
-        this.listeMusique = listeMusique;
-    }
-
     public class MusicBinder extends Binder
     {
         LecteurMusique getLecteur()
@@ -106,8 +114,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         }
     }
 
-    public LecteurMusique() {
-    }
+    public LecteurMusique() {}
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer)
@@ -181,7 +188,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         //Retourne à la fin de la liste si l'index de la chanson précédente est en-dessous de 0
         if(position < 0)
         {
-            position = listeMusique.size() - 1;
+            position = nbChansons - 1;
         }
         resetPause();
         jouer();
@@ -192,7 +199,7 @@ public class LecteurMusique extends Service implements MediaPlayer.OnPreparedLis
         position ++;
 
         //Retourne au début de la liste si on tente de jouer une chanson après la toute dernière de la liste
-        if(position >= listeMusique.size())
+        if(position >= nbChansons)
         {
             position = 0;
         }

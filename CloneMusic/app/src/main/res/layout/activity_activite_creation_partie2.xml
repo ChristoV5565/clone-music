@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ActiviteCreationPartie1"
+    android:orientation="vertical"
+    android:background="@color/black">
+
+    <include layout="@layout/layout_toolbar"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="63dp"
+        android:text="@string/ordre"
+        android:textColor="@color/grisPale"
+        android:gravity="center"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/titrePlayList"
+        android:textSize="20sp"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"/>
+
+    <ListView
+        android:id="@+id/listViewMusique"
+        android:layout_width="350dp"
+        android:layout_height="500dp"
+        android:background="@drawable/coins_arrondis_note_tour"
+        android:layout_gravity="center"/>
+
+    <Button
+        android:id="@+id/boutonContinuer"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:text="@string/boutonContinuer"
+        android:textColor="@color/grisPale"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:backgroundTint="@color/grisTresFonce"
+        />
+
+
+</LinearLayout>

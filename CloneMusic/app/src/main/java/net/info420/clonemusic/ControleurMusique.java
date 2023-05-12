@@ -1,5 +1,14 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Classe ControleurMusique
+*
+* Utilisé pour empêcher le contrôleur de musique (qui affiche play pause, etc.) de se cacher pendant
+* la lecture.
+*
+* */
+
 import android.content.Context;
 import android.widget.MediaController;
 

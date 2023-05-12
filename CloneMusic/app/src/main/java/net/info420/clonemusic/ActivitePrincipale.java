@@ -1,5 +1,21 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Activité principale
+*
+* Cette activité est affichée lors de l'ouverture de l'application. Elle affiche les chansons qui
+* sont présentes dans la base de données.
+*
+* Lors de la première ouverture, l'utilisateur doit faire un scan à partir de l'activité paramètres
+* pour que sa musique se retrouve dans la liste.
+*
+* L'activité permet à l'utilisateur de sélectionner une chanson dans la liste pour la faire jouer.
+* Lors de la lecture, l'application affiche un mediaController qui permet à l'utilisateur de contrôler
+* la lecture (pause, jouer, avant, arrière, seek)
+*
+* */
+
 import net.info420.clonemusic.LecteurMusique.MusicBinder;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +28,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -20,27 +35,25 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.MediaController;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
-import java.util.ArrayList;
 
 public class ActivitePrincipale extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener, MediaController.MediaPlayerControl {
 
     //Tag de débogage pour logcat
     public static String TAG = "main";
+
+    //Code utilisé lorsque l'application demande la permission de lire les fichiers dans le téléphone
     int codePermissionStockage = 1;
 
     //Déclaration des éléments du layout
@@ -48,12 +61,8 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     AppCompatButton boutonListeLecture;
     ListView listViewMusique;
     ListView listViewPlaylists;
-    MenuItem itemPlaylist;
-    Cursor curseurChansons;
 
     //Déclaration des éléments locaux de la classe
-    ArrayList<Chanson> arrayListChansons;
-    ArrayAdapter arrayAdapter;
     private LecteurMusique lecteurMusique;
     private boolean serviceAttache = false;
     private ControleurMusique controleurMusique;
@@ -62,49 +71,12 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
     Intent intentParametres;
     Intent intentLecteurMusique;
     Intent intentInfos;
+    Intent intentPlaylists;
 
     //Broadcastreciever pour la batterie
     BroadcastRecieverBatterie broadcastRecieverBatterie;
-
+    //Gestionnaire pour l'accès à la base de données
     GestionnaireBD gestionnaireBD;
-
-    private BroadcastReceiver rafraichisseur = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            if (controleurMusique != null)
-            {
-                controleurMusique.show();
-            }
-
-        }
-    };
-
-    //Permet de démarrer le service de lecture lors de l'ouverture de l'application
-    @Override
-    protected void onStart()
-    {
-        super.onStart();
-
-        if (intentLecteurMusique == null)
-        {
-            //Intent pour le démarrage du service
-            intentLecteurMusique = new Intent(this, LecteurMusique.class);
-            //Attacher le service à l'activité
-            bindService(intentLecteurMusique, conexionServiceMusique, Context.BIND_AUTO_CREATE);
-            //Démarrage du service
-            startService(intentLecteurMusique);
-
-            Log.d(TAG, "Service de lecture démarré");
-        }
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(rafraichisseur, new IntentFilter("LECTEUR_PRET"));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -115,6 +87,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         //Initialisation intents du menu
         intentParametres = new Intent(this, ActiviteParametres.class);
         intentInfos = new Intent(this, ActiviteInfos.class);
+        intentPlaylists = new Intent(this, ActiviteCreationPartie1.class);
 
         //Liaison des objets avec éléments du layout
         boutonMorceaux = findViewById(R.id.boutonMorceaux);
@@ -142,29 +115,22 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         toolbar.setTitle("Clone Music");
         toolbar.setTitleTextColor(Color.WHITE);
 
-
-
+        //Instanciation du gestionnaire de base de données
         gestionnaireBD = new GestionnaireBD(this);
 
-        //scanMusique(); //TODO: Remplacer par un appel à la base de données
-
+        //Récupère les chansons dans la base de données, puis les affiche dans une listview
         Cursor curseur = gestionnaireBD.queryChansons();
+
         String[] from = {GestionnaireBD.TITRE_CHANSONS};
         int[] to = {android.R.id.text1};
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, curseur, from, to, 0);
+
+        //Sélectionne toutes les occurences et les place dans le textview de chaque élément de la liste
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item_liste, curseur, from, to, 0);
         MyViewBinder myViewBinder = new MyViewBinder();
+
+        //Liaison du curseur à la liste
         adapter.setViewBinder(myViewBinder);
         listViewMusique.setAdapter(adapter);
-
-/*        //Initialisation de la liste de chansons derrière la listView
-        arrayListChansons = new ArrayList<Chanson>();
-        ArrayList<String> listeChansons = genererListeTitres(arrayListChansons);
-        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listeChansons);
-        listViewMusique.setAdapter(arrayAdapter);
-*/
-
-
-
 
         //Demande la permission de lire les fichiers à l'utilisateur si ce n'a pas déjà été fait
         if (verifPermissionStockage() == false) {
@@ -175,8 +141,32 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         broadcastRecieverBatterie = new BroadcastRecieverBatterie();
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_LOW);
         registerReceiver(broadcastRecieverBatterie, intentFilter);
+    }
 
+    //Permet de démarrer le service de lecture lors de l'ouverture de l'application
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
 
+        if (intentLecteurMusique == null)
+        {
+            //Intent pour le démarrage du service
+            intentLecteurMusique = new Intent(this, LecteurMusique.class);
+            //Attacher le service à l'activité
+            bindService(intentLecteurMusique, conexionServiceMusique, Context.BIND_AUTO_CREATE);
+            //Démarrage du service
+            startService(intentLecteurMusique);
+
+            Log.d(TAG, "Service de lecture démarré");
+        }
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(rafraichisseur, new IntentFilter("LECTEUR_PRET"));
     }
 
     private class MyViewBinder implements SimpleCursorAdapter.ViewBinder {
@@ -207,7 +197,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
                 boutonMorceaux.setTextSize(18);
                 boutonListeLecture.setTextSize(16);
                 boutonListeLecture.setTextColor(getResources().getColor(R.color.gray, getTheme()));
-                boutonMorceaux.setTextColor(getResources().getColor(R.color.black, getTheme()));
+                boutonMorceaux.setTextColor(getResources().getColor(R.color.white, getTheme()));
 
                 //Changer la visibilité des listes pour montrer la bonne liste lorsque le bouton est cliqué
                 listViewPlaylists.setVisibility(View.GONE);
@@ -220,7 +210,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
                 //Changer la taille du texte pour mettre en évidence l'onglet sélectionné
                 boutonMorceaux.setTextSize(16);
                 boutonListeLecture.setTextSize(18);
-                boutonListeLecture.setTextColor(getResources().getColor(R.color.black, getTheme()));
+                boutonListeLecture.setTextColor(getResources().getColor(R.color.white, getTheme()));
                 boutonMorceaux.setTextColor(getResources().getColor(R.color.gray, getTheme()));
 
                 //Changer la visibilité des listes pour montrer la bonne liste lorsque le bouton est cliqué
@@ -256,13 +246,16 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
             case R.id.itemParametres:
                 startActivity(intentParametres);
                 break;
+
+            case R.id.itemPlaylist:
+                startActivity(intentPlaylists);
+                break;
         }
-
-
 
         return true;
     }
 
+    //Permet de demander la permission de fouiller dans les fichiers de l'utilisateur
     //Source : https://www.youtube.com/watch?v=1D1Jo1sLBMo
     boolean verifPermissionStockage()
     {
@@ -279,6 +272,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         }
     }
 
+    //Demande la permission si elle n'a pas déjà été accordée
     //Source : https://www.youtube.com/watch?v=1D1Jo1sLBMo
     void demanderPermissionStockage() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(ActivitePrincipale.this, Manifest.permission.READ_EXTERNAL_STORAGE))
@@ -291,58 +285,7 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
         }
     }
 
-/*    public void scanMusique() {
-        int id;
-        int colonneId;
-
-        String titre;
-        int colonneTitre;
-
-        Chanson chanson;
-
-        //Base de données
-        //curseurChansons = this.getBD().queryChansons();
-
-        //Permet d'aller lire la musique dans le téléphone
-        ContentResolver contentResolver = getContentResolver();
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor curseurFichiersAudio = contentResolver.query(uri, null, null, null, null);
-
-        if (curseurFichiersAudio != null && curseurFichiersAudio.moveToFirst()) {
-            //Récupère les numéros des colonnes de la table des chansons retournées
-            colonneId = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media._ID);
-            colonneTitre = curseurFichiersAudio.getColumnIndex(MediaStore.Audio.Media.TITLE);
-
-            //Itère sur la liste de toutes les chansons et les rajoute à la liste des chansons disponibles sur le téléphone dans l'application
-            do {
-                //Récupère les données pertinentes de la ligne visée par le curseur
-                id = curseurFichiersAudio.getInt(colonneId);
-                titre = curseurFichiersAudio.getString(colonneTitre);
-
-                chanson = new Chanson(id, titre);
-
-                gestionnaireBD.insertChanson(chanson);
-
-                //arrayListChansons.add(chanson);
-            }
-
-            //Itère sur les chansons jusqu'à la dernière
-            while (curseurFichiersAudio.moveToNext());
-        }
-    }*/
-
-    public ArrayList<String> genererListeTitres(ArrayList<Chanson> liste)
-    {
-        ArrayList<String> listeTitres = new ArrayList<String>();
-
-        for (Chanson chanson : liste) {
-            listeTitres.add(chanson.getTitre());
-        }
-
-        return listeTitres;
-    }
-
-    //Handler pour le clic sur les éléments de la liste de chansons
+    //Handler pour le clic sur les éléments de la liste de chansons. Fait jouer la chanson sélectionnée
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
     {
@@ -355,16 +298,14 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
 
     }
 
+    //Permet de lier le service de musique à la classe qui contrôle la lecture
     //Source : https://code.tutsplus.com/tutorials/create-a-music-player-on-android-song-playback--mobile-22778
     private ServiceConnection conexionServiceMusique = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             MusicBinder binder = (MusicBinder) iBinder;
             lecteurMusique = binder.getLecteur();
-            //TODO : VÉRIFIER SI LES CHAMPS DE lA CLASSE SONT COMPATIBLES
-            lecteurMusique.setListeMusique(arrayListChansons);
             serviceAttache = true;
-
         }
 
         @Override
@@ -478,6 +419,17 @@ public class ActivitePrincipale extends AppCompatActivity implements View.OnClic
             return false;
         }
     }
+
+    private BroadcastReceiver rafraichisseur = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (controleurMusique != null)
+            {
+                controleurMusique.show();
+            }
+        }
+    };
 
     //Méthodes ajoutées par le controleur
     @Override

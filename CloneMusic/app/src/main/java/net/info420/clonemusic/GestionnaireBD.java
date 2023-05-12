@@ -1,23 +1,25 @@
 package net.info420.clonemusic;
 
+/*
+*
+* Classe GestionnaireBD
+*
+* Utilisé pour gérer l'accès à la base de données pour les autres classes.
+* Permet d'insérer des chansons, de les compter et de les récupérer
+*
+* */
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
 import android.provider.BaseColumns;
-import android.provider.MediaStore;
 import android.util.Log;
 
-import java.nio.ByteOrder;
-
 public class GestionnaireBD {
-
+    //Tag pour le debugging
     private static final String TAG = "gestionnaire";
-
     Context context;
     DBHelper dbHelper;
     SQLiteDatabase db;
@@ -27,7 +29,6 @@ public class GestionnaireBD {
 
     //Table chansons
     public static final String TABLE_CHANSONS = "chansons";
-    /*public static final String ID_CHANSONS = "c_id"; //Clé primaire*/
     public static final String ID_CHANSONS = BaseColumns._ID; //Clé primaire
     public static final String TITRE_CHANSONS = "c_titre";
     public static final String LIEN_CHANSONS = "c_lien";
@@ -49,6 +50,7 @@ public class GestionnaireBD {
         dbHelper = new DBHelper();
     }
 
+    //Retourne un curseur qui pointe sur toutes les chansons de la base de données
     public Cursor queryChansons(){
         Cursor cursor;
         db = dbHelper.getReadableDatabase();
@@ -57,6 +59,54 @@ public class GestionnaireBD {
         return cursor;
     }
 
+    //Retourne un curseur qui pointe sur toutes les chansons dont les identifiants se retrouvent dans la liste en paramètre
+    public Cursor queryChansons(String[] id_chansons)
+    {
+        Cursor cursor;
+        String sqlWhere = "";
+        db = dbHelper.getReadableDatabase();
+
+
+        for(int compteur = 0 ; compteur < id_chansons.length; compteur ++)
+        {
+            if(compteur == 0)
+            {
+                sqlWhere = ID_CHANSONS + " = " + id_chansons[compteur];
+            }
+            else
+            {
+                sqlWhere = sqlWhere + " or " + ID_CHANSONS + " = " + id_chansons[compteur];
+            }
+        }
+
+        String sql = String.format("select * from %s where %s", TABLE_CHANSONS, sqlWhere);
+
+        Log.d("CreationPt1", sql);
+
+        cursor = db.rawQuery(sql, null);
+        cursor.moveToFirst();
+        return cursor;
+    }
+
+    //Retourne l'identifiant machine d'une chanson à la position donnée dans la liste
+    public int queryChansons(int position){
+        Cursor cursor;
+        db = dbHelper.getReadableDatabase();
+
+        Log.d("LecteurMusique", "Tente de jouer chanson position : " + position);
+
+        //Compense parce que les index dans SQLite commencent à 1 au lieu de 0
+        position ++;
+
+        String sql = String.format("Select %s from %s where %s = %s", LIEN_CHANSONS, TABLE_CHANSONS, ID_CHANSONS, position);
+        cursor = db.rawQuery(sql, null);
+
+        cursor.moveToFirst();
+        int indentifiantChanson = cursor.getInt(cursor.getColumnIndexOrThrow(LIEN_CHANSONS));
+        return indentifiantChanson;
+    }
+
+    //Permet de supprimer la table chansons. Prépare la base de données à un nouveau scan
     public void resetChansons()
     {
         db = dbHelper.getReadableDatabase();
@@ -69,22 +119,18 @@ public class GestionnaireBD {
         db.execSQL(sql);
     }
 
-    public int queryChansons(int position){
+    //Retourne le nombre total de chansons dans la base de données
+    public int queryNombreChansons()
+    {
         Cursor cursor;
         db = dbHelper.getReadableDatabase();
-
-        position ++;
-
-        String sql = String.format("Select %s from %s where %s = %s", LIEN_CHANSONS, TABLE_CHANSONS, ID_CHANSONS, position);
-
-
+        String sql = String.format("Select * from %s", TABLE_CHANSONS);
         cursor = db.rawQuery(sql, null);
-        //int allo = cursor.getInt(0);
         cursor.moveToFirst();
-        int allo = cursor.getInt(cursor.getColumnIndexOrThrow(LIEN_CHANSONS));
-        return allo;
+        return cursor.getCount();
     }
 
+    //Permet d'insérer une chanson dans la table chansons
     public long insertChanson(Chanson chanson)
     {
         long insertResult;
@@ -101,17 +147,17 @@ public class GestionnaireBD {
         {
             Log.d(TAG, String.format("Chanson \"%s\" ID :  %s insérée dans la BD", chanson.getTitre(),chanson.getID()));
         }
+
         return insertResult;
     }
 
+    //Helper pour l'accès à la base de données
     private class DBHelper extends SQLiteOpenHelper
     {
-
         private static final String TAG = "DBHelper";
 
         public DBHelper() {
             super(context, DB_NAME, null, DB_VERSION);
-            //null on utilise le curseur standard. L'équivalent d'un select ben straight
         }
 
         @Override
@@ -126,30 +172,6 @@ public class GestionnaireBD {
             //Création de la table playlists
             sql = String.format("create table %s (%s int primary key, %s text)", TABLE_PLAYLISTS, ID_PLAYLISTS, TITRE_PLAYSLIST);
             db.execSQL(sql);
-
-
-/*            sql = String.format("create table %s (%s int, %s int, %s int, primary key (%s, %s, %s), foreign key (%s) references %s(%s), foreign key (%s) references %s(%s))",
-                    TABLE_LIEN,  //Table
-                    ID_LIEN_CHANSON, //Champ 1
-                    ID_LIEN_PLAYLIST, //Champ 2
-                    ORDRE_CHANSON, //Champ 3
-
-                    //Primary key
-                    ID_LIEN_CHANSON,
-                    ID_LIEN_PLAYLIST,
-                    ORDRE_CHANSON,
-
-                    //Foreign key 1
-                    ID_CHANSONS,
-                    TABLE_CHANSONS,
-                    ID_CHANSONS,
-
-                    //Foreign key 2
-                    ID_PLAYLISTS,
-                    TABLE_PLAYLISTS,
-                    ID_PLAYLISTS
-                    );
-            db.execSQL(sql);*/
         }
 
         @Override

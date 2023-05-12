@@ -5,23 +5,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ActivitePrincipale"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/black">
 
     <include layout="@layout/layout_toolbar"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="47dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@color/black">
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/boutonMorceaux"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@color/white"
+            android:background="@color/black"
             android:text="@string/morceaux"
             android:textSize="14sp"
+            android:textColor="@color/white"
             tools:ignore="TouchTargetSizeCheck" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -29,7 +32,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@color/white"
+            android:background="@color/black"
+            android:textColor="@color/gray"
             android:text="@string/listeLecture"
             tools:ignore="TouchTargetSizeCheck" />
 
@@ -39,7 +43,7 @@
         android:id="@+id/listViewMusique"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/coins_arrondis"
+        android:background="@drawable/coins_arrondis_note"
         android:clipToPadding="false"
         android:paddingBottom="100dp"
         android:translationY="20dp"
@@ -49,7 +53,7 @@
         android:id="@+id/listViewPlaylists"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/coins_arrondis"
+        android:background="@drawable/coins_arrondis_note"
         android:translationY="20dp"
         android:visibility="gone"
         android:padding="8dp"/>

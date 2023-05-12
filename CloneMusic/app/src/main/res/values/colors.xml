@@ -9,4 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#FF909090</color>
     <color name="grisPale">#FFCECECE</color>
+
+    <color name="grisTresFonce">#272727</color>
+    <color name="grisQuasimentNoir">#161616</color>
 </resources>
